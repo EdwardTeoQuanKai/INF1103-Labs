@@ -1,8 +1,8 @@
 # Activity 1
-# print("================================")
-# print("Welcome Here")
-# print("My first post!")
-# print("================================")
+print("================================")
+print("Welcome Here")
+print("My first post!")
+print("================================")
 
 # Activity 2
 # print("================================")
