@@ -8,10 +8,10 @@ print("================================")
 # print("================================")
 # print("Welcome Here")
 # print("My first post!")
-print("================================")
+# print("================================")
 
-username = "cool_creator"
-bio = "Fun Blogger"
+# username = "cool_creator"
+# bio = "Fun Blogger"
 # followers = 100
 
 # print("Username:", username)
