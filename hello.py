@@ -1,8 +1,8 @@
 # Activity 1
-# print("================================")
-# print("Welcome Here")
-# print("My first post!")
-# print("================================")
+print("================================")
+print("Welcome Here")
+print("My first post!")
+print("================================")
 
 # Activity 2
 # print("================================")
@@ -43,15 +43,15 @@
 # print("Category:", category)
 
 # Activity 5
-username = input("Enter Username: ")
-age =int(input("Enter Age: "))
-category =input("Enter Content Category: ")
+# username = input("Enter Username: ")
+# age =int(input("Enter Age: "))
+# category =input("Enter Content Category: ")
 
-print("\nInstagram Profile")
-print("====================")
-print("Username:", username)
-print("Age:", age)
-print("Category:", category)
+# print("\nInstagram Profile")
+# print("====================")
+# print("Username:", username)
+# print("Age:", age)
+# print("Category:", category)
 
-if age>40 and category == "fun":
-    print("you are old what is fun for you??")
+# if age>40 and category == "fun":
+#     print("you are old what is fun for you??")
