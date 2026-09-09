@@ -32,19 +32,8 @@
 
 
 # Activity 4
-username = input("Enter Username: ")
-age =input("Enter Age: ")
-category =input("Enter Content Category: ")
-
-print("\nInstagram Profile")
-print("====================")
-print("Username:", username)
-print("Age:", age)
-print("Category:", category)
-
-# Activity 5
 # username = input("Enter Username: ")
-# age =int(input("Enter Age: "))
+# age =input("Enter Age: ")
 # category =input("Enter Content Category: ")
 
 # print("\nInstagram Profile")
@@ -53,5 +42,16 @@ print("Category:", category)
 # print("Age:", age)
 # print("Category:", category)
 
-# if age>40 and category == "fun":
-#     print("you are old what is fun for you??")
+# Activity 5
+username = input("Enter Username: ")
+age =int(input("Enter Age: "))
+category =input("Enter Content Category: ")
+
+print("\nInstagram Profile")
+print("====================")
+print("Username:", username)
+print("Age:", age)
+print("Category:", category)
+
+if age>40 and category == "fun":
+    print("you are old what is fun for you??")
