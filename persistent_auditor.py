@@ -85,6 +85,13 @@ def load_inventory():
                 if line == "":
                     continue
 
+                # Ignore the final total and transaction history
+                if line.startswith("Final Total:"):
+                    continue
+
+                if line.startswith("Transaction History:"):
+                    continue
+
                 # Split the saved order:
                 # Product ID, Product Name, Quantity
                 parts = line.split(",")
@@ -161,6 +168,40 @@ def generate_product_id(orders):
     return highest_id + 1
 
 
+# ---------------------------------------------------------
+# FUNCTION 6: save_inventory()
+# ---------------------------------------------------------
+# What goes in?
+# - orders = current inventory orders
+# - history = transaction history list
+#
+# What comes out?
+# - Saves the inventory and transaction history
+#   into inventory.txt
+def save_inventory(orders, history):
+
+    # Calculate the final total quantity
+    final_total = sum(order[2] for order in orders)
+
+    # Open inventory.txt in write mode
+    with open("inventory.txt", "w") as file:
+
+        # Save every current order
+        for order in orders:
+            file.write(
+                f"{order[0]},{order[1]},{order[2]}\n"
+            )
+
+        # Save the final total
+        file.write(f"Final Total: {final_total}\n")
+
+        # Save the transaction history
+        file.write(f"Transaction History: {history}\n")
+
+    print()
+    print("Inventory successfully saved to inventory.txt.")
+
+
 # =========================================================
 # MAIN PROGRAM
 # =========================================================
@@ -184,10 +225,16 @@ while True:
     # Stop the program if the user enters quit
     if product_name == "quit":
 
-        # Display the transaction history before ending
+        # Display the transaction history
         print()
         print("Transaction History:")
         print(transaction_history)
+
+        # Save inventory before ending the program
+        save_inventory(
+            current_orders,
+            transaction_history
+        )
 
         break
 
