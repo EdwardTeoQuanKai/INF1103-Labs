@@ -168,6 +168,9 @@ def generate_product_id(orders):
 # Load existing inventory from inventory.txt
 current_orders = load_inventory()
 
+# Create an empty list to track every valid transaction
+transaction_history = []
+
 # Display the existing orders
 display_inventory(current_orders)
 
@@ -180,6 +183,12 @@ while True:
 
     # Stop the program if the user enters quit
     if product_name == "quit":
+
+        # Display the transaction history before ending
+        print()
+        print("Transaction History:")
+        print(transaction_history)
+
         break
 
     # If the product name is invalid, try again
@@ -199,6 +208,9 @@ while True:
     # Add the new order to memory
     new_order = [product_id, product_name, quantity]
     current_orders.append(new_order)
+
+    # Add the valid quantity to the transaction history list
+    transaction_history.append(quantity)
 
     # Display the newly added order
     print("\nNew Order Added:")
