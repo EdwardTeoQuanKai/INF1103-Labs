@@ -1,7 +1,7 @@
 
 # INF1103 Lab 8 - Inventory Management System
-# Section 2: Association between Supplier and Product
-# Extended from Lab 7, with the existing menu and JSON format preserved.
+# Sections 2 and 3: Association and Aggregation
+# Extended from Lab 7
 
 import json
 import math
@@ -12,32 +12,31 @@ from supplier import Supplier
 # =========================================================
 # INTERFACE: CanBeShipped
 # =========================================================
-# Defines a capability that a class must implement.
 class CanBeShipped(ABC):
 
     @abstractmethod
-    def calculate_shipping_cost(self):
+    def calculate_shipping_cost(self) -> float:
         pass
 
 
 # =========================================================
 # ABSTRACT PARENT CLASS: Product
 # =========================================================
-# Stores common product information and behaviour.
-# A Product cannot be created directly because it is abstract.
 class Product(ABC):
 
-    def __init__(self, product_id: str, name: str, price: float,
-                 stock: int, supplier: Supplier) -> None:
+    def __init__(self, product_id: str, name: str,
+                 price: float, stock: int,
+                 supplier: Supplier) -> None:
+
         self.__product_id = product_id
         self.__name = name
         self.__price = price
         self.__stock = stock
 
-        # Association: Store a reference to an existing Supplier.
+        # Association: Product references an existing Supplier.
         self.supplier: Supplier = supplier
 
-    def update_stock(self, quantity):
+    def update_stock(self, quantity: int) -> None:
         if quantity < 0:
             print("Error: Stock cannot be negative.")
             return
@@ -50,20 +49,17 @@ class Product(ABC):
         print(f"Price: ${self.__price:.2f}")
         print(f"Stock: {self.__stock}")
 
-        # Display the associated Supplier information.
         print("Supplier Information:")
         self.supplier.display_information()
 
-    def get_product_id(self):
+    def get_product_id(self) -> str:
         return self.__product_id
 
     @abstractmethod
-    def get_fulfilment_info(self):
-        # Every child class must implement this method.
+    def get_fulfilment_info(self) -> str:
         pass
 
-    def to_dict(self):
-        # Shared fields for JSON persistence.
+    def to_dict(self) -> dict:
         return {
             "id": self.__product_id,
             "name": self.__name,
@@ -75,31 +71,34 @@ class Product(ABC):
 # =========================================================
 # CHILD CLASS: PhysicalProduct
 # =========================================================
-# PhysicalProduct is-a Product and can be shipped.
 class PhysicalProduct(Product, CanBeShipped):
 
-    def __init__(self, product_id: str, name: str, price: float,
-                 stock: int, weight: float, supplier: Supplier) -> None:
-        super().__init__(product_id, name, price, stock, supplier)
+    def __init__(self, product_id: str, name: str,
+                 price: float, stock: int,
+                 weight: float, supplier: Supplier) -> None:
+
+        super().__init__(
+            product_id, name, price, stock, supplier
+        )
+
         self.__weight = weight
 
-    # Override the parent display method.
-    def display_information(self):
+    def display_information(self) -> None:
         super().display_information()
         print("Type: Physical")
         print(f"Weight: {self.__weight:.2f} kg")
         print(self.get_fulfilment_info())
-        print(f"Shipping Cost: ${self.calculate_shipping_cost():.2f}")
+        print(
+            f"Shipping Cost: ${self.calculate_shipping_cost():.2f}"
+        )
 
-    def get_fulfilment_info(self):
+    def get_fulfilment_info(self) -> str:
         return "Fulfilment: Requires physical shipping."
 
-    # Implement the shipping interface.
-    def calculate_shipping_cost(self):
-        # $5 base fee + $2 per kilogram.
+    def calculate_shipping_cost(self) -> float:
         return 5.00 + (2.00 * self.__weight)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         data = super().to_dict()
         data["type"] = "physical"
         data["weight"] = self.__weight
@@ -109,26 +108,29 @@ class PhysicalProduct(Product, CanBeShipped):
 # =========================================================
 # CHILD CLASS: DigitalProduct
 # =========================================================
-# Digital products do not need physical shipping.
 class DigitalProduct(Product):
 
-    def __init__(self, product_id: str, name: str, price: float,
-                 stock: int, download_size: float,
+    def __init__(self, product_id: str, name: str,
+                 price: float, stock: int,
+                 download_size: float,
                  supplier: Supplier) -> None:
-        super().__init__(product_id, name, price, stock, supplier)
+
+        super().__init__(
+            product_id, name, price, stock, supplier
+        )
+
         self.__download_size = download_size
 
-    # Override the parent display method.
-    def display_information(self):
+    def display_information(self) -> None:
         super().display_information()
         print("Type: Digital")
         print(f"Download Size: {self.__download_size:.2f} MB")
         print(self.get_fulfilment_info())
 
-    def get_fulfilment_info(self):
+    def get_fulfilment_info(self) -> str:
         return "Fulfilment: Delivered digitally by download."
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         data = super().to_dict()
         data["type"] = "digital"
         data["download_size"] = self.__download_size
@@ -138,53 +140,78 @@ class DigitalProduct(Product):
 # =========================================================
 # CLASS: Inventory
 # =========================================================
-# Manages multiple Product objects.
+# Aggregation: Inventory contains independent Product objects.
 class Inventory:
 
-    def __init__(self):
-        self.__products = []
+    def __init__(self) -> None:
 
-    def add_product(self, product, show_message=True):
+        # Store Product references in a typed collection.
+        # This can hold PhysicalProduct and DigitalProduct.
+        self.products: list[Product] = []
 
-        if self.search_product(product.get_product_id()) is not None:
+    # Add an existing Product object.
+    def add_product(self, product: Product,
+                    show_message: bool = True) -> None:
+
+        if self.find_product(product.get_product_id()) is not None:
             print("Product ID already exists.")
             return
 
-        self.__products.append(product)
+        self.products.append(product)
 
         if show_message:
             print("Product added successfully!")
 
-    def search_product(self, product_id):
+    # NEW: Remove a Product reference from this Inventory.
+    def remove_product(self, product_id: str) -> Product | None:
 
-        for product in self.__products:
+        for index, product in enumerate(self.products):
+
+            if product.get_product_id().lower() == product_id.lower():
+
+                # pop() removes the reference from the list.
+                # It does not destroy the Product if other
+                # references to the object still exist.
+                return self.products.pop(index)
+
+        return None
+
+    # NEW: Find a Product using its ID.
+    def find_product(self, product_id: str) -> Product | None:
+
+        for product in self.products:
+
             if product.get_product_id().lower() == product_id.lower():
                 return product
 
         return None
 
-    def display_all(self):
+    # Keep the Lab 7 search method for the existing menu.
+    def search_product(self, product_id: str) -> Product | None:
+        return self.find_product(product_id)
+
+    def display_all(self) -> None:
 
         print("Current Inventory")
         print("------------------------------------------------")
 
-        if not self.__products:
+        if not self.products:
             print("No products in inventory.")
             print("------------------------------------------------")
             return
 
-        for product in self.__products:
+        for product in self.products:
             product.display_information()
             print("------------------------------------------------")
 
-    def to_dict_list(self):
-        return [product.to_dict() for product in self.__products]
+    def to_dict_list(self) -> list[dict]:
+        return [product.to_dict() for product in self.products]
 
 
 # =========================================================
 # USER INPUT HELPERS
 # =========================================================
-def read_nonnegative_float(prompt):
+def read_nonnegative_float(prompt: str) -> float:
 
     while True:
         entered = input(prompt).strip()
@@ -203,7 +230,7 @@ def read_nonnegative_float(prompt):
         return number
 
 
-def ask_product_type():
+def ask_product_type() -> tuple[str, float]:
 
     while True:
         print("1. Physical Product")
@@ -227,8 +254,9 @@ def ask_product_type():
 # =========================================================
 # PRODUCT CREATION
 # =========================================================
-def create_product(product_id: str, name: str, price: float,
-                   stock: int, product_type: str, extra: float,
+def create_product(product_id: str, name: str,
+                   price: float, stock: int,
+                   product_type: str, extra: float,
                    supplier: Supplier) -> Product:
 
     if product_type == "physical":
@@ -275,7 +303,7 @@ def load_inventory(supplier: Supplier) -> Inventory:
 
             product_type = data.get("type")
 
-            # Convert older Lab 6 records into Lab 7 objects.
+            # Handle older Lab 6 records.
             if product_type is None:
 
                 print(
@@ -302,7 +330,6 @@ def load_inventory(supplier: Supplier) -> Inventory:
             if not math.isfinite(extra) or extra < 0:
                 raise ValueError("Invalid weight or download size")
 
-            # Pass the Supplier object to the Product.
             product = create_product(
                 data["id"],
                 data["name"],
@@ -325,7 +352,7 @@ def load_inventory(supplier: Supplier) -> Inventory:
     return inventory
 
 
-def save_inventory(inventory):
+def save_inventory(inventory: Inventory) -> None:
 
     with open("inventory.json", "w", encoding="utf-8") as file:
         json.dump(inventory.to_dict_list(), file, indent=4)
@@ -349,7 +376,7 @@ def handle_add_product(inventory: Inventory,
         print("Error: Product ID cannot be empty.")
         return
 
-    if inventory.search_product(product_id) is not None:
+    if inventory.find_product(product_id) is not None:
         print("Product ID already exists.")
         return
 
@@ -369,10 +396,8 @@ def handle_add_product(inventory: Inventory,
 
     stock = int(stock_input)
 
-    # Choose between physical and digital products.
     product_type, extra = ask_product_type()
 
-    # Create the correct subclass with a Supplier object.
     product = create_product(
         product_id,
         product_name,
@@ -387,12 +412,12 @@ def handle_add_product(inventory: Inventory,
 
 
 # FUNCTION 2: Update Stock
-def handle_update_stock(inventory):
+def handle_update_stock(inventory: Inventory) -> None:
 
     print("Update Stock")
 
     product_id = input("Enter Product ID: ").strip()
-    product = inventory.search_product(product_id)
+    product = inventory.find_product(product_id)
 
     if product is None:
         print("Product not found.")
@@ -412,12 +437,12 @@ def handle_update_stock(inventory):
 
 
 # FUNCTION 3: Search Product
-def handle_search_product(inventory):
+def handle_search_product(inventory: Inventory) -> None:
 
     print("Search Product")
 
     product_id = input("Enter Product ID: ").strip()
-    product = inventory.search_product(product_id)
+    product = inventory.find_product(product_id)
 
     if product is None:
         print("Product not found.")
@@ -432,7 +457,7 @@ def handle_search_product(inventory):
 # =========================================================
 # MENU
 # =========================================================
-def display_menu():
+def display_menu() -> None:
 
     print("----------- MENU -----------")
     print("1. Display All Products")
@@ -447,17 +472,17 @@ def display_menu():
 # =========================================================
 # MAIN PROGRAM
 # =========================================================
-def main():
+def main() -> None:
 
     print("========================================")
     print("INVENTORY MANAGEMENT SYSTEM - LAB 8")
     print("========================================")
 
-    # Create the Supplier independently before creating Products.
-    # For Section 2, we use the same Supplier for all products.
-    supplier = Supplier("S001", "ABC Electronics", "abc@example.com")
+    # Create Supplier separately from Product.
+    supplier = Supplier(
+        "S001", "ABC Electronics", "abc@example.com"
+    )
 
-    # Load products and associate them with the Supplier.
     inventory = load_inventory(supplier)
 
     while True:
