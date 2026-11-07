@@ -1,6 +1,6 @@
 
 # INF1103 Lab 8 - Inventory Management System
-# Sections 2 and 3: Association and Aggregation
+# Sections 2-4: Association, Aggregation and Composition
 # Extended from Lab 7
 
 import json
@@ -33,17 +33,21 @@ class Product(ABC):
         self.__price = price
         self.__stock = stock
 
-        # Association: Product references an existing Supplier.
+        # Association: Reference to an existing Supplier.
         self.supplier: Supplier = supplier
 
+    # Update the product stock.
     def update_stock(self, quantity: int) -> None:
+
         if quantity < 0:
             print("Error: Stock cannot be negative.")
             return
 
         self.__stock = quantity
 
+    # Display common Product information.
     def display_information(self) -> None:
+
         print(f"ID: {self.__product_id}")
         print(f"Name: {self.__name}")
         print(f"Price: ${self.__price:.2f}")
@@ -55,10 +59,17 @@ class Product(ABC):
     def get_product_id(self) -> str:
         return self.__product_id
 
+    # NEW: Read-only property for the Product price.
+    # OrderLine can read price without accessing __price.
+    @property
+    def price(self) -> float:
+        return self.__price
+
     @abstractmethod
     def get_fulfilment_info(self) -> str:
         pass
 
+    # Convert Product information into a dictionary.
     def to_dict(self) -> dict:
         return {
             "id": self.__product_id,
@@ -83,8 +94,11 @@ class PhysicalProduct(Product, CanBeShipped):
 
         self.__weight = weight
 
+    # Method overriding.
     def display_information(self) -> None:
+
         super().display_information()
+
         print("Type: Physical")
         print(f"Weight: {self.__weight:.2f} kg")
         print(self.get_fulfilment_info())
@@ -95,13 +109,16 @@ class PhysicalProduct(Product, CanBeShipped):
     def get_fulfilment_info(self) -> str:
         return "Fulfilment: Requires physical shipping."
 
+    # Shipping interface implementation.
     def calculate_shipping_cost(self) -> float:
         return 5.00 + (2.00 * self.__weight)
 
     def to_dict(self) -> dict:
+
         data = super().to_dict()
         data["type"] = "physical"
         data["weight"] = self.__weight
+
         return data
 
 
@@ -121,8 +138,11 @@ class DigitalProduct(Product):
 
         self.__download_size = download_size
 
+    # Method overriding.
     def display_information(self) -> None:
+
         super().display_information()
+
         print("Type: Digital")
         print(f"Download Size: {self.__download_size:.2f} MB")
         print(self.get_fulfilment_info())
@@ -131,22 +151,22 @@ class DigitalProduct(Product):
         return "Fulfilment: Delivered digitally by download."
 
     def to_dict(self) -> dict:
+
         data = super().to_dict()
         data["type"] = "digital"
         data["download_size"] = self.__download_size
+
         return data
 
 
 # =========================================================
 # CLASS: Inventory
 # =========================================================
-# Aggregation: Inventory contains independent Product objects.
+# Aggregation: Products exist independently of Inventory.
 class Inventory:
 
     def __init__(self) -> None:
 
-        # Store Product references in a typed collection.
-        # This can hold PhysicalProduct and DigitalProduct.
         self.products: list[Product] = []
 
     # Add an existing Product object.
@@ -162,21 +182,17 @@ class Inventory:
         if show_message:
             print("Product added successfully!")
 
-    # NEW: Remove a Product reference from this Inventory.
+    # Remove a Product reference from Inventory.
     def remove_product(self, product_id: str) -> Product | None:
 
         for index, product in enumerate(self.products):
 
             if product.get_product_id().lower() == product_id.lower():
-
-                # pop() removes the reference from the list.
-                # It does not destroy the Product if other
-                # references to the object still exist.
                 return self.products.pop(index)
 
         return None
 
-    # NEW: Find a Product using its ID.
+    # Find and return a Product, or None.
     def find_product(self, product_id: str) -> Product | None:
 
         for product in self.products:
@@ -186,7 +202,7 @@ class Inventory:
 
         return None
 
-    # Keep the Lab 7 search method for the existing menu.
+    # Preserve the Lab 7 search method.
     def search_product(self, product_id: str) -> Product | None:
         return self.find_product(product_id)
 
@@ -214,6 +230,7 @@ class Inventory:
 def read_nonnegative_float(prompt: str) -> float:
 
     while True:
+
         entered = input(prompt).strip()
 
         try:
@@ -233,6 +250,7 @@ def read_nonnegative_float(prompt: str) -> float:
 def ask_product_type() -> tuple[str, float]:
 
     while True:
+
         print("1. Physical Product")
         print("2. Digital Product")
 
@@ -278,6 +296,7 @@ def create_product(product_id: str, name: str,
 def load_inventory(supplier: Supplier) -> Inventory:
 
     try:
+
         with open("inventory.json", "r", encoding="utf-8") as file:
             saved_products = json.load(file)
 
@@ -299,11 +318,12 @@ def load_inventory(supplier: Supplier) -> Inventory:
     inventory = Inventory()
 
     try:
+
         for data in saved_products:
 
             product_type = data.get("type")
 
-            # Handle older Lab 6 records.
+            # Support older Lab 6 records without a product type.
             if product_type is None:
 
                 print(
@@ -330,6 +350,7 @@ def load_inventory(supplier: Supplier) -> Inventory:
             if not math.isfinite(extra) or extra < 0:
                 raise ValueError("Invalid weight or download size")
 
+            # Supplier is passed to each Product.
             product = create_product(
                 data["id"],
                 data["name"],
@@ -340,9 +361,13 @@ def load_inventory(supplier: Supplier) -> Inventory:
                 supplier
             )
 
-            inventory.add_product(product, show_message=False)
+            inventory.add_product(
+                product,
+                show_message=False
+            )
 
     except (KeyError, TypeError, ValueError) as error:
+
         print(
             f"Error: Invalid product data in inventory.json ({error})."
         )
@@ -478,7 +503,7 @@ def main() -> None:
     print("INVENTORY MANAGEMENT SYSTEM - LAB 8")
     print("========================================")
 
-    # Create Supplier separately from Product.
+    # Create Supplier independently.
     supplier = Supplier(
         "S001", "ABC Electronics", "abc@example.com"
     )
