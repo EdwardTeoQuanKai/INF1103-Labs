@@ -1,0 +1,9 @@
+FROM python:3.14.7
+
+WORKDIR /usr/src/app
+
+COPY inventory_manager_lab9.py discount_strategy.py order_lab9.py order_line_lab9.py supplier.py demo_lab9.py products.csv ./
+
+COPY tests/ ./tests/
+
+CMD ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
